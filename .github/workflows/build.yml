@@ -11,6 +11,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +32,7 @@ jobs:
         run: flutter config --enable-web
 
       - name: Configure Flutter Web
-        run: flutter create --platforms=web .
+        run: flutter create . --platforms web
 
       - name: Get dependencies
         run: flutter pub get
@@ -41,5 +45,15 @@ jobs:
         with:
           path: build/web
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
